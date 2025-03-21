@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>簡轉繁 WP 主題轉換器</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>簡轉繁 WP 主題轉換器</h1>
+        <p>將簡體中文 WordPress 主題轉換成台灣用語的正體中文</p>
+    </header>
+    
+    <main>
+        <section class="upload-container">
+            <div class="drop-area" id="dropArea">
+                <p>拖放 WordPress 主題壓縮檔至此處</p>
+                <p>或</p>
+                <label for="fileInput" class="upload-btn">選擇檔案</label>
+                <input type="file" id="fileInput" accept=".zip" hidden>
+            </div>
+            <p class="file-info" id="fileInfo">尚未選擇檔案</p>
+        </section>
+        
+        <section class="dictionary-container">
+            <h2>自訂轉換字典</h2>
+            <p>自訂台灣用語轉換規則，專注於正體字詞的慣用語差異</p>
+            
+            <div class="dictionary-controls">
+                <button id="showDictionaryBtn" class="secondary-btn">管理字典</button>
+                <button id="importDictionaryBtn" class="secondary-btn">匯入字典</button>
+                <button id="exportDictionaryBtn" class="secondary-btn">匯出字典</button>
+                <a href="default_dictionary.json" download class="secondary-btn">下載範例字典</a>
+                <input type="file" id="dictionaryFileInput" accept=".json" hidden>
+            </div>
+            
+            <div id="dictionaryEditor" class="dictionary-editor" style="display: none;">
+                <div class="dictionary-header">
+                    <div class="dict-col">原始詞彙</div>
+                    <div class="dict-col">台灣用語</div>
+                    <div class="dict-col">操作</div>
+                </div>
+                <div id="dictionaryEntries" class="dictionary-entries"></div>
+                <div class="dictionary-add">
+                    <input type="text" id="simplifiedInput" placeholder="輸入原始詞彙（如：設置）">
+                    <input type="text" id="traditionalInput" placeholder="輸入台灣用語（如：設定）">
+                    <button id="addDictionaryEntryBtn" class="add-btn">新增</button>
+                </div>
+            </div>
+        </section>
+        
+        <section class="progress-container" id="progressContainer" style="display: none;">
+            <h2>正在轉換中...</h2>
+            <div class="progress-bar">
+                <div class="progress" id="progressBar"></div>
+            </div>
+            <p id="progressStatus">準備中...</p>
+        </section>
+        
+        <section class="result-container" id="resultContainer" style="display: none;">
+            <h2>轉換完成！</h2>
+            <p>您的 WordPress 主題已成功轉換為台灣用語的正體中文</p>
+            <a href="#" id="downloadBtn" class="download-btn">下載轉換後的主題</a>
+        </section>
+    </main>
+    
+    <footer>
+        <p>此工具使用 OpenCC 進行繁簡轉換 | <a href="https://github.com/BYVoid/OpenCC" target="_blank">OpenCC 專案</a></p>
+        <p><a href="https://github.com/AWTT/AWTT" target="_blank">GitHub 專案</a></p>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/opencc.min.js"></script>
+    <script src="dictionary.js"></script>
+    <script src="script.js"></script>
+</body>
+</html> 
