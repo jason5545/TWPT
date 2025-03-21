@@ -275,7 +275,7 @@ async function processZipFiles(zip) {
         // 準備下載
         convertedFile = new File(
             [newZipBlob], 
-            uploadedFile.name.replace('.zip', '-繁體中文.zip'), 
+            uploadedFile.name.replace('.zip', '-正體中文.zip'), 
             { type: 'application/zip' }
         );
         
