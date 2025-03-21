@@ -20,8 +20,24 @@ function initConverter() {
         if (typeof OpenCC === 'undefined') {
             throw new Error("OpenCC is not defined - 繁簡轉換庫無法載入");
         }
-        // 使用s2twp轉換器（簡體轉台灣正體，並轉換用語）
-        converter = OpenCC.Converter({ from: 'cn', to: 'twp' });
+        
+        // 使用正確的 API 格式初始化轉換器
+        // 從簡體中文（中國大陸，'s'/'cn'）轉換為繁體中文（台灣，'tw'/'twp'）
+        try {
+            // 嘗試新版 API
+            converter = OpenCC.Converter({ from: 'cn', to: 'twp' });
+        } catch (e) {
+            console.warn('新版 API 初始化失敗，嘗試替代方法:', e);
+            
+            // 嘗試替代的 API 形式
+            if (typeof OpenCC.s2twp === 'function') {
+                converter = function(text) { return OpenCC.s2twp(text); };
+            } else if (typeof OpenCC.s2t === 'function') {
+                converter = function(text) { return OpenCC.s2t(text); };
+            } else {
+                throw new Error('找不到適合的轉換函數');
+            }
+        }
     } catch (error) {
         console.error('初始化 OpenCC 轉換器時發生錯誤:', error);
         alert('無法初始化繁簡轉換器: ' + error.message + '\n請確認網路連線正常且能夠存取 CDN 資源。');
@@ -115,6 +131,24 @@ function formatFileSize(bytes) {
 
 // 開始轉換過程
 function startConversion() {
+    // 檢查轉換器
+    if (!converter) {
+        try {
+            console.log('轉換器未初始化，嘗試初始化...');
+            initConverter();
+            if (!converter) {
+                alert('無法初始化繁簡轉換器，請重新整理頁面後再試。');
+                resetUI();
+                return;
+            }
+        } catch (error) {
+            console.error('初始化轉換器時發生錯誤:', error);
+            alert('初始化轉換器時發生錯誤: ' + error.message);
+            resetUI();
+            return;
+        }
+    }
+    
     // 顯示進度區域
     progressContainer.style.display = 'block';
     resultContainer.style.display = 'none';
@@ -127,7 +161,14 @@ function startConversion() {
     reader.onload = async function(e) {
         try {
             const zipData = e.target.result;
+            if (!zipData) {
+                throw new Error('讀取的壓縮檔資料為空');
+            }
+            
             const zip = await JSZip.loadAsync(zipData);
+            if (!zip) {
+                throw new Error('解壓縮失敗');
+            }
             
             updateProgress(20, '分析檔案中...');
             
@@ -141,77 +182,114 @@ function startConversion() {
         }
     };
     
-    reader.onerror = function() {
+    reader.onerror = function(error) {
+        console.error('讀取檔案時發生錯誤:', error);
         alert('讀取檔案時發生錯誤。');
         resetUI();
     };
     
-    reader.readAsArrayBuffer(uploadedFile);
+    try {
+        if (!uploadedFile) {
+            throw new Error('沒有選擇檔案');
+        }
+        reader.readAsArrayBuffer(uploadedFile);
+    } catch (error) {
+        console.error('讀取檔案時發生錯誤:', error);
+        alert('準備檔案讀取時發生錯誤: ' + error.message);
+        resetUI();
+    }
 }
 
 // 處理ZIP檔案中的所有檔案
 async function processZipFiles(zip) {
-    // 獲取所有檔案
-    const files = Object.keys(zip.files);
-    const totalFiles = files.length;
-    let processedFiles = 0;
-    
-    // 建立新的zip檔案用於儲存轉換後的結果
-    const newZip = new JSZip();
-    
-    updateProgress(25, `正在轉換檔案... (0/${totalFiles})`);
-    
-    // 處理每個檔案
-    for (const filename of files) {
-        const file = zip.files[filename];
-        
-        if (file.dir) {
-            // 如果是目錄，直接加入新的zip
-            newZip.folder(filename);
-        } else {
-            // 如果是檔案，檢查是否需要轉換
-            const fileData = await file.async('string');
-            let newData = fileData;
-            
-            // 根據檔案類型決定是否需要轉換
-            if (shouldConvertFile(filename)) {
-                newData = convertContent(fileData);
-            }
-            
-            // 將檔案加入新的zip
-            newZip.file(filename, newData);
-        }
-        
-        processedFiles++;
-        const progress = 25 + Math.floor((processedFiles / totalFiles) * 70);
-        updateProgress(progress, `正在轉換檔案... (${processedFiles}/${totalFiles})`);
+    if (!zip || typeof zip !== 'object') {
+        throw new Error('無效的 ZIP 檔案數據');
     }
     
-    updateProgress(95, '正在產生新的壓縮檔...');
-    
-    // 產生新的zip檔案
-    const newZipBlob = await newZip.generateAsync({
-        type: 'blob',
-        compression: 'DEFLATE',
-        compressionOptions: {
-            level: 9
+    try {
+        // 獲取所有檔案
+        const files = Object.keys(zip.files);
+        if (files.length === 0) {
+            throw new Error('ZIP 檔案中沒有檔案');
         }
-    });
-    
-    // 準備下載
-    convertedFile = new File(
-        [newZipBlob], 
-        uploadedFile.name.replace('.zip', '-繁體中文.zip'), 
-        { type: 'application/zip' }
-    );
-    
-    updateProgress(100, '轉換完成！');
-    
-    // 顯示下載區域
-    setTimeout(() => {
-        progressContainer.style.display = 'none';
-        resultContainer.style.display = 'block';
-    }, 500);
+        
+        const totalFiles = files.length;
+        let processedFiles = 0;
+        
+        // 建立新的zip檔案用於儲存轉換後的結果
+        const newZip = new JSZip();
+        
+        updateProgress(25, `正在轉換檔案... (0/${totalFiles})`);
+        
+        // 處理每個檔案
+        for (const filename of files) {
+            try {
+                const file = zip.files[filename];
+                
+                if (!file) {
+                    console.warn(`無法獲取檔案: ${filename}，已跳過`);
+                    continue;
+                }
+                
+                if (file.dir) {
+                    // 如果是目錄，直接加入新的zip
+                    newZip.folder(filename);
+                } else {
+                    // 如果是檔案，檢查是否需要轉換
+                    const fileData = await file.async('string');
+                    let newData = fileData;
+                    
+                    // 根據檔案類型決定是否需要轉換
+                    if (shouldConvertFile(filename)) {
+                        newData = convertContent(fileData);
+                    }
+                    
+                    // 將檔案加入新的zip
+                    newZip.file(filename, newData);
+                }
+                
+                processedFiles++;
+                const progress = 25 + Math.floor((processedFiles / totalFiles) * 70);
+                updateProgress(progress, `正在轉換檔案... (${processedFiles}/${totalFiles})`);
+            } catch (fileError) {
+                console.error(`處理檔案 ${filename} 時發生錯誤:`, fileError);
+                // 繼續處理其他檔案
+            }
+        }
+        
+        updateProgress(95, '正在產生新的壓縮檔...');
+        
+        // 產生新的zip檔案
+        const newZipBlob = await newZip.generateAsync({
+            type: 'blob',
+            compression: 'DEFLATE',
+            compressionOptions: {
+                level: 9
+            }
+        });
+        
+        if (!newZipBlob) {
+            throw new Error('產生新的壓縮檔失敗');
+        }
+        
+        // 準備下載
+        convertedFile = new File(
+            [newZipBlob], 
+            uploadedFile.name.replace('.zip', '-繁體中文.zip'), 
+            { type: 'application/zip' }
+        );
+        
+        updateProgress(100, '轉換完成！');
+        
+        // 顯示下載區域
+        setTimeout(() => {
+            progressContainer.style.display = 'none';
+            resultContainer.style.display = 'block';
+        }, 500);
+    } catch (error) {
+        console.error('處理 ZIP 檔案時發生錯誤:', error);
+        throw error; // 讓上層函數處理錯誤
+    }
 }
 
 // 判斷檔案是否需要轉換
@@ -225,28 +303,55 @@ function shouldConvertFile(filename) {
 
 // 轉換內容
 function convertContent(content) {
-    if (!converter) {
-        try {
-            initConverter();
-            // 如果初始化後仍然沒有轉換器，則返回原始內容
-            if (!converter) {
-                console.warn('OpenCC 轉換器無法初始化，使用原始內容');
+    if (!content) return '';
+    
+    try {
+        // 確保轉換器已初始化
+        if (!converter) {
+            try {
+                initConverter();
+                if (!converter) {
+                    console.warn('OpenCC 轉換器無法初始化，使用原始內容');
+                    return content;
+                }
+            } catch (error) {
+                console.error('轉換內容時發生錯誤:', error);
+                alert('處理檔案時發生錯誤: OpenCC is not defined。\n請重新整理頁面後再試。');
                 return content;
             }
-        } catch (error) {
-            console.error('轉換內容時發生錯誤:', error);
-            alert('處理檔案時發生錯誤: OpenCC is not defined。\n請重新整理頁面後再試。');
-            return content;
         }
+        
+        // 第一步：使用OpenCC進行簡繁中文轉換
+        let convertedContent = '';
+        try {
+            convertedContent = converter(content);
+            if (!convertedContent) {
+                console.warn('OpenCC 轉換結果為空，使用原始內容');
+                convertedContent = content;
+            }
+        } catch (openccError) {
+            console.error('使用 OpenCC 轉換時發生錯誤:', openccError);
+            convertedContent = content; // 發生錯誤時使用原始內容
+        }
+        
+        // 第二步：使用自訂字典進行用語轉換（例如「設置」→「設定」）
+        try {
+            if (typeof customDictionary !== 'undefined' && 
+                typeof customDictionary.convertWithDictionary === 'function') {
+                convertedContent = customDictionary.convertWithDictionary(convertedContent);
+            } else {
+                console.warn('字典轉換功能不可用，跳過字典轉換');
+            }
+        } catch (dictError) {
+            console.error('使用字典轉換時發生錯誤:', dictError);
+            // 保留 OpenCC 的轉換結果
+        }
+        
+        return convertedContent;
+    } catch (error) {
+        console.error('轉換內容時發生未知錯誤:', error);
+        return content; // 發生未知錯誤時返回原始內容
     }
-    
-    // 第一步：使用OpenCC進行簡繁中文轉換
-    let convertedContent = converter(content);
-    
-    // 第二步：使用自訂字典進行用語轉換（例如「設置」→「設定」）
-    convertedContent = customDictionary.convertWithDictionary(convertedContent);
-    
-    return convertedContent;
 }
 
 // 更新進度條
@@ -277,11 +382,20 @@ function handleDownload(e) {
 
 // 重設UI
 function resetUI() {
-    progressContainer.style.display = 'none';
-    resultContainer.style.display = 'none';
-    fileInfo.textContent = '尚未選擇檔案';
-    progressBar.style.width = '0%';
-    progressStatus.textContent = '準備中...';
+    // 隱藏進度區域和結果區域
+    if (progressContainer) progressContainer.style.display = 'none';
+    if (resultContainer) resultContainer.style.display = 'none';
+    
+    // 清空檔案信息
+    if (fileInfo) fileInfo.textContent = '尚未選擇檔案';
+    
+    // 重置進度條
+    if (progressBar) progressBar.style.width = '0%';
+    if (progressStatus) progressStatus.textContent = '';
+    
+    // 重置文件變數
+    uploadedFile = null;
+    convertedFile = null;
 }
 
 // 初始化

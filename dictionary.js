@@ -12,22 +12,40 @@ class CustomDictionary {
         // 從localStorage載入先前保存的字典
         this.loadFromStorage();
         
-        // DOM元素
-        this.showDictionaryBtn = document.getElementById('showDictionaryBtn');
-        this.importDictionaryBtn = document.getElementById('importDictionaryBtn');
-        this.exportDictionaryBtn = document.getElementById('exportDictionaryBtn');
-        this.dictionaryFileInput = document.getElementById('dictionaryFileInput');
-        this.dictionaryEditor = document.getElementById('dictionaryEditor');
-        this.dictionaryEntries = document.getElementById('dictionaryEntries');
-        this.simplifiedInput = document.getElementById('simplifiedInput');
-        this.traditionalInput = document.getElementById('traditionalInput');
-        this.addDictionaryEntryBtn = document.getElementById('addDictionaryEntryBtn');
-        
-        // 初始化事件監聽器
-        this.initEventListeners();
-        
-        // 更新UI顯示
-        this.updateDictionaryUI();
+        try {
+            // DOM元素
+            this.showDictionaryBtn = document.getElementById('showDictionaryBtn');
+            this.importDictionaryBtn = document.getElementById('importDictionaryBtn');
+            this.exportDictionaryBtn = document.getElementById('exportDictionaryBtn');
+            this.dictionaryFileInput = document.getElementById('dictionaryFileInput');
+            this.dictionaryEditor = document.getElementById('dictionaryEditor');
+            this.dictionaryEntries = document.getElementById('dictionaryEntries');
+            this.simplifiedInput = document.getElementById('simplifiedInput');
+            this.traditionalInput = document.getElementById('traditionalInput');
+            this.addDictionaryEntryBtn = document.getElementById('addDictionaryEntryBtn');
+            
+            // 檢查是否有找到所有必要元素
+            const requiredElements = [
+                this.showDictionaryBtn, this.dictionaryEntries, 
+                this.dictionaryEditor, this.simplifiedInput, 
+                this.traditionalInput, this.addDictionaryEntryBtn
+            ];
+            
+            const allElementsFound = requiredElements.every(el => el !== null);
+            
+            if (!allElementsFound) {
+                console.warn('字典 UI 元素未完全找到，某些功能可能受限');
+            } else {
+                // 初始化事件監聽器
+                this.initEventListeners();
+                
+                // 更新UI顯示
+                this.updateDictionaryUI();
+            }
+        } catch (error) {
+            console.error('初始化字典時發生錯誤:', error);
+            // 仍然允許基本字典功能工作 - 只是沒有 UI
+        }
     }
     
     // 初始化事件監聽器
@@ -217,21 +235,38 @@ class CustomDictionary {
     
     // 應用字典進行轉換
     convertWithDictionary(text) {
-        let result = text;
+        if (!text) return '';
         
-        // 先應用字典中的精確詞彙替換
-        for (const simplified in this.entries) {
-            const traditional = this.entries[simplified];
-            // 使用全局正則表達式進行替換
-            const regex = new RegExp(this.escapeRegExp(simplified), 'g');
-            result = result.replace(regex, traditional);
+        try {
+            let result = text;
+            
+            // 先應用字典中的精確詞彙替換
+            for (const simplified in this.entries) {
+                if (!simplified) continue;
+                
+                const traditional = this.entries[simplified];
+                if (!traditional) continue;
+                
+                try {
+                    // 使用全局正則表達式進行替換
+                    const regex = new RegExp(this.escapeRegExp(simplified), 'g');
+                    result = result.replace(regex, traditional);
+                } catch (regexError) {
+                    console.warn(`轉換「${simplified}」時發生錯誤，已跳過:`, regexError);
+                }
+            }
+            
+            return result;
+        } catch (error) {
+            console.error('字典轉換時發生錯誤:', error);
+            // 發生錯誤時返回原始文本
+            return text;
         }
-        
-        return result;
     }
     
     // 轉義正則表達式特殊字符
     escapeRegExp(string) {
+        if (!string || typeof string !== 'string') return '';
         return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 }

@@ -71,8 +71,26 @@
     </footer>
     
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-    <!-- 加載 OpenCC (優先使用 CDN，失敗時自動使用本地備份) -->
+    <!-- 加載 OpenCC 和其他相依腳本 (確保加載順序) -->
     <script>
+        // 追蹤資源載入狀態
+        const resourceStatus = {
+            opencc: false,
+            dictionary: false
+        };
+
+        // 在所有資源載入完成後初始化應用
+        function checkAndInitApp() {
+            if (resourceStatus.opencc && resourceStatus.dictionary) {
+                console.log('所有資源已載入，初始化應用程式');
+                // 載入主腳本
+                const scriptTag = document.createElement('script');
+                scriptTag.src = "script.js";
+                document.body.appendChild(scriptTag);
+            }
+        }
+
+        // 載入腳本的通用函數
         function loadScript(src, fallbackSrc, callback) {
             let script = document.createElement('script');
             script.src = src;
@@ -83,21 +101,50 @@
                 fallbackScript.src = fallbackSrc;
                 fallbackScript.onload = callback;
                 fallbackScript.onerror = function() {
-                    console.error('無法載入 OpenCC 庫，轉換功能將無法使用');
+                    console.error('無法載入資源，功能將受到限制');
                 };
                 document.body.appendChild(fallbackScript);
             };
             document.body.appendChild(script);
         }
         
-        // 嘗試載入 OpenCC，提供一個本地備份選項
+        // 先載入字典
+        const dictScript = document.createElement('script');
+        dictScript.src = "dictionary.js";
+        dictScript.onload = function() {
+            console.log('字典模組載入成功');
+            resourceStatus.dictionary = true;
+            checkAndInitApp();
+        };
+        dictScript.onerror = function() {
+            console.error('載入字典時發生錯誤');
+        };
+        document.body.appendChild(dictScript);
+
+        // 嘗試載入 OpenCC
         loadScript(
             'https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js',
             'lib/opencc-full.js',
-            function() { console.log('OpenCC 成功載入'); }
+            function() { 
+                console.log('OpenCC 成功載入'); 
+                
+                // 嘗試載入特定轉換器模塊
+                if (typeof OpenCC !== 'undefined' && !OpenCC.s2twp) {
+                    loadScript(
+                        'https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/cn2t.js',
+                        'lib/opencc-cn2t.js',
+                        function() { 
+                            console.log('OpenCC 簡繁轉換模塊載入成功');
+                            resourceStatus.opencc = true;
+                            checkAndInitApp();
+                        }
+                    );
+                } else {
+                    resourceStatus.opencc = true;
+                    checkAndInitApp();
+                }
+            }
         );
     </script>
-    <script src="dictionary.js"></script>
-    <script src="script.js"></script>
 </body>
 </html> 
