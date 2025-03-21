@@ -23,12 +23,14 @@ class CustomDictionary {
             this.simplifiedInput = document.getElementById('simplifiedInput');
             this.traditionalInput = document.getElementById('traditionalInput');
             this.addDictionaryEntryBtn = document.getElementById('addDictionaryEntryBtn');
+            this.loadDefaultDictionaryBtn = document.getElementById('loadDefaultDictionaryBtn');
             
             // 檢查是否有找到所有必要元素
             const requiredElements = [
                 this.showDictionaryBtn, this.dictionaryEntries, 
                 this.dictionaryEditor, this.simplifiedInput, 
-                this.traditionalInput, this.addDictionaryEntryBtn
+                this.traditionalInput, this.addDictionaryEntryBtn,
+                this.loadDefaultDictionaryBtn
             ];
             
             const allElementsFound = requiredElements.every(el => el !== null);
@@ -88,6 +90,11 @@ class CustomDictionary {
             if (e.key === 'Enter') {
                 this.addEntry();
             }
+        });
+        
+        // 載入預設字典
+        this.loadDefaultDictionaryBtn.addEventListener('click', () => {
+            this.loadDefaultDictionary();
         });
     }
     
@@ -231,6 +238,35 @@ class CustomDictionary {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+    }
+    
+    // 載入預設字典
+    loadDefaultDictionary() {
+        fetch('default_dictionary.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('無法載入預設字典檔案');
+                }
+                return response.json();
+            })
+            .then(dict => {
+                if (Object.keys(this.entries).length > 0) {
+                    if (!confirm('這將會覆蓋或合併現有字典內容，確定要繼續嗎？')) {
+                        return;
+                    }
+                }
+                
+                // 合併字典
+                this.entries = { ...this.entries, ...dict };
+                this.saveToStorage();
+                this.updateDictionaryUI();
+                
+                alert(`成功載入預設字典，共 ${Object.keys(dict).length} 個項目`);
+            })
+            .catch(error => {
+                console.error('載入預設字典時發生錯誤:', error);
+                alert('載入預設字典時發生錯誤: ' + error.message);
+            });
     }
     
     // 應用字典進行轉換
