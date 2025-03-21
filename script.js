@@ -15,8 +15,18 @@ let converter = null;
 
 // 初始化OpenCC轉換器
 function initConverter() {
-    // 使用s2twp轉換器（簡體轉台灣正體，並轉換用語）
-    converter = OpenCC.Converter({ from: 's', to: 'twp' });
+    try {
+        // 檢查 OpenCC 是否已定義
+        if (typeof OpenCC === 'undefined') {
+            throw new Error("OpenCC is not defined - 繁簡轉換庫無法載入");
+        }
+        // 使用s2twp轉換器（簡體轉台灣正體，並轉換用語）
+        converter = OpenCC.Converter({ from: 'cn', to: 'twp' });
+    } catch (error) {
+        console.error('初始化 OpenCC 轉換器時發生錯誤:', error);
+        alert('無法初始化繁簡轉換器: ' + error.message + '\n請確認網路連線正常且能夠存取 CDN 資源。');
+        resetUI();
+    }
 }
 
 // 事件監聽器設定
@@ -216,7 +226,18 @@ function shouldConvertFile(filename) {
 // 轉換內容
 function convertContent(content) {
     if (!converter) {
-        initConverter();
+        try {
+            initConverter();
+            // 如果初始化後仍然沒有轉換器，則返回原始內容
+            if (!converter) {
+                console.warn('OpenCC 轉換器無法初始化，使用原始內容');
+                return content;
+            }
+        } catch (error) {
+            console.error('轉換內容時發生錯誤:', error);
+            alert('處理檔案時發生錯誤: OpenCC is not defined。\n請重新整理頁面後再試。');
+            return content;
+        }
     }
     
     // 第一步：使用OpenCC進行簡繁中文轉換

@@ -71,7 +71,32 @@
     </footer>
     
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/opencc.min.js"></script>
+    <!-- 加載 OpenCC (優先使用 CDN，失敗時自動使用本地備份) -->
+    <script>
+        function loadScript(src, fallbackSrc, callback) {
+            let script = document.createElement('script');
+            script.src = src;
+            script.onload = callback;
+            script.onerror = function() {
+                console.warn(`無法從 ${src} 載入，嘗試備用來源...`);
+                let fallbackScript = document.createElement('script');
+                fallbackScript.src = fallbackSrc;
+                fallbackScript.onload = callback;
+                fallbackScript.onerror = function() {
+                    console.error('無法載入 OpenCC 庫，轉換功能將無法使用');
+                };
+                document.body.appendChild(fallbackScript);
+            };
+            document.body.appendChild(script);
+        }
+        
+        // 嘗試載入 OpenCC，提供一個本地備份選項
+        loadScript(
+            'https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js',
+            'lib/opencc-full.js',
+            function() { console.log('OpenCC 成功載入'); }
+        );
+    </script>
     <script src="dictionary.js"></script>
     <script src="script.js"></script>
 </body>
