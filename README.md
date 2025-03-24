@@ -1,5 +1,7 @@
 # 簡轉繁 WP 主題轉換器
 
+TWPT (Traditional WordPress Theme Translator) - 正體中文WordPress主題轉換器
+
 這個專案提供一個簡單的工具，能夠自動將簡體中文WordPress主題轉換成台灣用語的正體中文版本。
 
 ## 功能
