@@ -149,6 +149,14 @@ function startConversion() {
         }
     }
     
+    // 檢查 JSZip 是否已載入
+    if (typeof JSZip === 'undefined') {
+        console.error('JSZip 未定義，無法處理ZIP檔案');
+        alert('無法處理ZIP檔案：套件載入失敗\n請確認網路連線正常且能夠存取 CDN 資源，然後重新整理頁面。');
+        resetUI();
+        return;
+    }
+    
     // 顯示進度區域
     progressContainer.style.display = 'block';
     resultContainer.style.display = 'none';
@@ -336,8 +344,10 @@ function convertContent(content) {
         
         // 第二步：使用自訂字典進行用語轉換（例如「設置」→「設定」）
         try {
-            if (typeof customDictionary !== 'undefined' && 
-                typeof customDictionary.convertWithDictionary === 'function') {
+            // 檢查全域 customDictionary 物件是否存在
+            if (typeof window.customDictionary === 'undefined') {
+                console.warn('自訂字典物件未定義，跳過字典轉換');
+            } else if (typeof customDictionary.convertWithDictionary === 'function') {
                 convertedContent = customDictionary.convertWithDictionary(convertedContent);
             } else {
                 console.warn('字典轉換功能不可用，跳過字典轉換');
@@ -401,4 +411,12 @@ function resetUI() {
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
     initEventListeners();
+    
+    // 預先初始化轉換器
+    try {
+        console.log('預先初始化轉換器...');
+        initConverter();
+    } catch (error) {
+        console.error('預先初始化轉換器時發生錯誤:', error);
+    }
 }); 
