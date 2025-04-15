@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="簡轉繁 WP 主題轉換器 - 將簡體中文WordPress主題自動轉換為台灣用語的正體中文">
+    <meta name="description" content="正體中文 WordPress 主題轉換器 (TWPT) - 將簡體中文WordPress主題自動轉換為台灣用語的正體中文">
     <meta name="keywords" content="WordPress主題,簡體轉繁體,正體中文,台灣用語">
     <meta name="author" content="TWPT">
-    <title>簡轉繁 WP 主題轉換器</title>
+    <title>正體中文 WordPress 主題轉換器 (TWPT)</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔄</text></svg>">
 </head>
 <body>
     <header>
-        <h1>簡轉繁 WP 主題轉換器</h1>
-        <p>將簡體中文 WordPress 主題轉換成台灣用語的正體中文</p>
+        <h1>正體中文 WordPress 主題轉換器</h1>
+        <p>將簡體中文 WordPress 主題自動轉換為台灣用語的正體中文</p>
     </header>
     
     <main>
@@ -84,7 +84,7 @@
             // 定義需要載入的腳本
             const scripts = [
                 { 
-                    src: 'dictionary.js',
+                    src: 'wpTranslationDictionary.js',
                     onload: () => {
                         console.log('字典模組載入成功');
                         resourceStatus.dictionary = true;
@@ -136,7 +136,7 @@
                     console.log('所有資源已載入，初始化應用程式');
                     // 載入主腳本
                     const scriptTag = document.createElement('script');
-                    scriptTag.src = "script.js";
+                    scriptTag.src = "wpThemeConverter.js";
                     document.body.appendChild(scriptTag);
                 }
             }
