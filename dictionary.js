@@ -78,7 +78,8 @@ class CustomDictionary {
         });
         
         // 匯入字典
-        this.importDictionaryBtn.addEventListener('click', () => {
+        this.importDictionaryBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // 阻止事件冒泡
             this.dictionaryFileInput.click();
         });
         
