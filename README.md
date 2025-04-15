@@ -13,7 +13,7 @@ TWPT (Traditional WordPress Theme Translator) - 正體中文WordPress主題轉�
 
 ## 使用方式
 
-1. 前往此專案的GitHub Pages網站：[https://AWTT.github.io/AWTT/](https://AWTT.github.io/AWTT/)
+1. 前往此專案的GitHub Pages網站：[https://jason5545.github.io/TWPT/](https://jason5545.github.io/TWPT/)
 2. 上傳您的WordPress主題壓縮檔
 3. 等待轉換完成
 4. 下載轉換後的正體中文主題
@@ -57,8 +57,8 @@ TWPT (Traditional WordPress Theme Translator) - 正體中文WordPress主題轉�
 
 1. 克隆此儲存庫
    ```
-   git clone https://github.com/AWTT/AWTT.git
-   cd AWTT
+   git clone https://github.com/jason5545/TWPT.git
+   cd TWPT
    ```
 
 2. 使用任何HTTP伺服器運行，例如：
