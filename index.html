@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="簡轉繁 WP 主題轉換器 - 將簡體中文WordPress主題自動轉換為台灣用語的正體中文">
+    <meta name="keywords" content="WordPress主題,簡體轉繁體,正體中文,台灣用語">
+    <meta name="author" content="TWPT">
     <title>簡轉繁 WP 主題轉換器</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔄</text></svg>">
 </head>
 <body>
     <header>
@@ -61,90 +65,85 @@
         <section class="result-container" id="resultContainer" style="display: none;">
             <h2>轉換完成！</h2>
             <p>您的 WordPress 主題已成功轉換為台灣用語的正體中文</p>
+            <div class="result-info" id="resultInfo"></div>
             <a href="#" id="downloadBtn" class="download-btn">下載轉換後的主題</a>
         </section>
     </main>
     
     <footer>
-        <p>此工具使用 OpenCC 進行繁簡轉換 | <a href="https://github.com/BYVoid/OpenCC" target="_blank">OpenCC 專案</a></p>
-        <p><a href="https://github.com/jason5545/AWTT" target="_blank">GitHub 專案</a></p>
+        <p>此工具使用 OpenCC 進行繁簡轉換 | <a href="https://github.com/BYVoid/OpenCC" target="_blank" rel="noopener">OpenCC 專案</a></p>
+        <p><a href="https://github.com/AWTT/AWTT" target="_blank" rel="noopener">GitHub 專案</a></p>
+        <p class="version">版本 1.1.0</p>
     </footer>
-    
-    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-    <!-- 加載 OpenCC 和其他相依腳本 (確保加載順序) -->
+
+    <!-- 載入必要的腳本 -->
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js" integrity="sha384-8m4YF6oKZZ8+MBdzUTlnzNT+hZwX5FnFVYVE5J5iCVgOJ0n1zBYZ9Yxe7xmYwLix" crossorigin="anonymous"></script>
     <script>
-        // 追蹤資源載入狀態
-        const resourceStatus = {
-            opencc: false,
-            dictionary: false
-        };
-
-        // 在所有資源載入完成後初始化應用
-        function checkAndInitApp() {
-            if (resourceStatus.opencc && resourceStatus.dictionary) {
-                console.log('所有資源已載入，初始化應用程式');
-                // 載入主腳本
-                const scriptTag = document.createElement('script');
-                scriptTag.src = "script.js";
-                document.body.appendChild(scriptTag);
-            }
-        }
-
-        // 載入腳本的通用函數
-        function loadScript(src, fallbackSrc, callback) {
-            let script = document.createElement('script');
-            script.src = src;
-            script.onload = callback;
-            script.onerror = function() {
-                console.warn(`無法從 ${src} 載入，嘗試備用來源...`);
-                let fallbackScript = document.createElement('script');
-                fallbackScript.src = fallbackSrc;
-                fallbackScript.onload = callback;
-                fallbackScript.onerror = function() {
-                    console.error('無法載入資源，功能將受到限制');
-                };
-                document.body.appendChild(fallbackScript);
+        // 資源載入與初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 定義需要載入的腳本
+            const scripts = [
+                { 
+                    src: 'dictionary.js',
+                    onload: () => {
+                        console.log('字典模組載入成功');
+                        resourceStatus.dictionary = true;
+                        checkAndInitApp();
+                    }
+                },
+                { 
+                    src: 'https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js',
+                    fallback: 'lib/opencc-full.js',
+                    onload: () => {
+                        console.log('OpenCC 成功載入');
+                        resourceStatus.opencc = true;
+                        checkAndInitApp();
+                    }
+                }
+            ];
+            
+            // 追蹤資源載入狀態
+            const resourceStatus = {
+                opencc: false,
+                dictionary: false
             };
-            document.body.appendChild(script);
-        }
-        
-        // 先載入字典
-        const dictScript = document.createElement('script');
-        dictScript.src = "dictionary.js";
-        dictScript.onload = function() {
-            console.log('字典模組載入成功');
-            resourceStatus.dictionary = true;
-            checkAndInitApp();
-        };
-        dictScript.onerror = function() {
-            console.error('載入字典時發生錯誤');
-        };
-        document.body.appendChild(dictScript);
-
-        // 嘗試載入 OpenCC
-        loadScript(
-            'https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/full.js',
-            'lib/opencc-full.js',
-            function() { 
-                console.log('OpenCC 成功載入'); 
-                
-                // 嘗試載入特定轉換器模塊
-                if (typeof OpenCC !== 'undefined' && !OpenCC.s2twp) {
-                    loadScript(
-                        'https://cdn.jsdelivr.net/npm/opencc-js@1.0.5/dist/umd/cn2t.js',
-                        'lib/opencc-cn2t.js',
-                        function() { 
-                            console.log('OpenCC 簡繁轉換模塊載入成功');
-                            resourceStatus.opencc = true;
-                            checkAndInitApp();
-                        }
-                    );
-                } else {
-                    resourceStatus.opencc = true;
-                    checkAndInitApp();
+            
+            // 載入腳本的通用函數
+            function loadScript(scriptObj) {
+                const script = document.createElement('script');
+                script.src = scriptObj.src;
+                script.onload = scriptObj.onload;
+                script.onerror = function() {
+                    if (scriptObj.fallback) {
+                        console.warn(`無法從 ${scriptObj.src} 載入，嘗試備用來源...`);
+                        const fallbackScript = document.createElement('script');
+                        fallbackScript.src = scriptObj.fallback;
+                        fallbackScript.onload = scriptObj.onload;
+                        fallbackScript.onerror = function() {
+                            console.error('無法載入資源，功能將受到限制');
+                        };
+                        document.body.appendChild(fallbackScript);
+                    } else {
+                        console.error(`載入 ${scriptObj.src} 時發生錯誤`);
+                    }
+                };
+                document.body.appendChild(script);
+            }
+            
+            // 在所有資源載入完成後初始化應用
+            function checkAndInitApp() {
+                if (resourceStatus.opencc && resourceStatus.dictionary) {
+                    console.log('所有資源已載入，初始化應用程式');
+                    // 載入主腳本
+                    const scriptTag = document.createElement('script');
+                    scriptTag.src = "script.js";
+                    document.body.appendChild(scriptTag);
                 }
             }
-        );
+            
+            // 載入所有腳本
+            scripts.forEach(loadScript);
+        });
     </script>
 </body>
 </html> 

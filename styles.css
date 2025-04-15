@@ -1,11 +1,22 @@
 /* 基本設定 */
 :root {
     --primary-color: #4a6fa5;
+    --primary-dark: #3a5a8c;
     --accent-color: #ff6b6b;
-    --background-color: #f9f9f9;
+    --accent-dark: #ff5252;
+    --background-color: #f7f9fc;
     --text-color: #333;
+    --text-light: #666;
     --border-color: #ddd;
     --secondary-color: #6c757d;
+    --secondary-dark: #5a6268;
+    --card-bg: #ffffff;
+    --success-color: #28a745;
+    --error-color: #dc3545;
+    --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 5px 15px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.12);
+    --transition-speed: 0.3s;
 }
 
 * {
@@ -15,43 +26,56 @@
 }
 
 body {
-    font-family: "微軟正黑體", "Microsoft JhengHei", sans-serif;
+    font-family: "微軟正黑體", "Microsoft JhengHei", "PingFang TC", "蘋方-繁", "Noto Sans TC", sans-serif;
     line-height: 1.6;
     color: var(--text-color);
     background-color: var(--background-color);
     padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 /* 頁首 */
 header {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 2.5rem;
     padding: 20px;
+    animation: fadeIn 0.8s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 header h1 {
     font-size: 2.5rem;
     color: var(--primary-color);
     margin-bottom: 10px;
+    letter-spacing: -0.02em;
 }
 
 header p {
     font-size: 1.2rem;
+    color: var(--text-light);
 }
 
 /* 主要內容 */
 main {
     max-width: 800px;
+    width: 100%;
     margin: 0 auto;
-    background: white;
+    background: var(--card-bg);
     border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
     padding: 40px;
+    flex: 1;
 }
 
 /* 上傳區域 */
 .upload-container {
-    margin-bottom: 30px;
+    margin-bottom: 2rem;
 }
 
 .drop-area {
@@ -60,13 +84,14 @@ main {
     padding: 50px 20px;
     text-align: center;
     margin-bottom: 20px;
-    transition: all 0.3s ease;
+    transition: all var(--transition-speed) ease;
     cursor: pointer;
+    background-color: var(--background-color);
 }
 
 .drop-area:hover, .drop-area.highlight {
     border-color: var(--primary-color);
-    background-color: rgba(74, 111, 165, 0.05);
+    background-color: rgba(74, 111, 165, 0.08);
 }
 
 .upload-btn {
@@ -77,29 +102,41 @@ main {
     border-radius: 5px;
     cursor: pointer;
     margin-top: 10px;
-    transition: all 0.3s ease;
+    transition: all var(--transition-speed) ease;
+    font-weight: 500;
+    box-shadow: var(--shadow-sm);
 }
 
 .upload-btn:hover {
-    background-color: #3a5a8c;
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
 }
 
 .file-info {
     text-align: center;
-    color: #666;
+    color: var(--text-light);
+    margin-top: 10px;
 }
 
 /* 自訂字典區域 */
 .dictionary-container {
-    margin-bottom: 30px;
+    margin-bottom: 2rem;
     border: 1px solid var(--border-color);
     border-radius: 10px;
     padding: 20px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-speed) ease;
+}
+
+.dictionary-container:hover {
+    box-shadow: var(--shadow-md);
 }
 
 .dictionary-container h2 {
     color: var(--primary-color);
     margin-bottom: 10px;
+    font-size: 1.5rem;
 }
 
 .dictionary-controls {
@@ -116,11 +153,15 @@ main {
     padding: 8px 15px;
     border-radius: 5px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--transition-speed) ease;
+    font-weight: 500;
+    box-shadow: var(--shadow-sm);
 }
 
 .secondary-btn:hover {
-    background-color: #5a6268;
+    background-color: var(--secondary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
 }
 
 .dictionary-editor {
@@ -128,6 +169,7 @@ main {
     border: 1px solid var(--border-color);
     border-radius: 5px;
     overflow: hidden;
+    box-shadow: var(--shadow-sm);
 }
 
 .dictionary-header {
@@ -135,6 +177,7 @@ main {
     background-color: var(--primary-color);
     color: white;
     padding: 10px;
+    font-weight: bold;
 }
 
 .dict-col {
@@ -150,16 +193,36 @@ main {
 .dictionary-entries {
     max-height: 300px;
     overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--secondary-color) var(--background-color);
+}
+
+.dictionary-entries::-webkit-scrollbar {
+    width: 8px;
+}
+
+.dictionary-entries::-webkit-scrollbar-track {
+    background: var(--background-color);
+}
+
+.dictionary-entries::-webkit-scrollbar-thumb {
+    background-color: var(--secondary-color);
+    border-radius: 4px;
 }
 
 .dictionary-entry {
     display: flex;
     padding: 10px;
     border-bottom: 1px solid var(--border-color);
+    transition: background-color var(--transition-speed) ease;
 }
 
 .dictionary-entry:nth-child(even) {
     background-color: rgba(0, 0, 0, 0.02);
+}
+
+.dictionary-entry:hover {
+    background-color: rgba(74, 111, 165, 0.05);
 }
 
 .delete-btn {
@@ -169,10 +232,11 @@ main {
     padding: 5px 10px;
     border-radius: 3px;
     cursor: pointer;
+    transition: all var(--transition-speed) ease;
 }
 
 .delete-btn:hover {
-    background-color: #ff5252;
+    background-color: var(--accent-dark);
 }
 
 .dictionary-add {
@@ -183,9 +247,15 @@ main {
 
 .dictionary-add input {
     flex: 1;
-    padding: 8px;
+    padding: 8px 12px;
     border: 1px solid var(--border-color);
     border-radius: 3px;
+    transition: border-color var(--transition-speed) ease;
+}
+
+.dictionary-add input:focus {
+    outline: none;
+    border-color: var(--primary-color);
 }
 
 .add-btn {
@@ -195,15 +265,23 @@ main {
     padding: 8px 15px;
     border-radius: 3px;
     cursor: pointer;
+    transition: all var(--transition-speed) ease;
+    font-weight: 500;
 }
 
 .add-btn:hover {
-    background-color: #3a5a8c;
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
 }
 
 /* 進度條 */
 .progress-container {
-    margin-bottom: 30px;
+    margin-bottom: 2rem;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: var(--background-color);
+    box-shadow: var(--shadow-sm);
+    animation: fadeIn 0.5s ease-in-out;
 }
 
 .progress-bar {
@@ -212,6 +290,7 @@ main {
     border-radius: 10px;
     margin: 20px 0;
     overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .progress {
@@ -219,16 +298,59 @@ main {
     background-color: var(--primary-color);
     width: 0%;
     transition: width 0.3s ease;
+    position: relative;
+}
+
+.progress::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        -45deg,
+        rgba(255, 255, 255, 0.2) 25%,
+        transparent 25%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.2) 75%,
+        transparent 75%
+    );
+    background-size: 30px 30px;
+    animation: progressAnimation 2s linear infinite;
+}
+
+@keyframes progressAnimation {
+    0% { background-position: 0 0; }
+    100% { background-position: 30px 0; }
 }
 
 #progressStatus {
     text-align: center;
-    color: #666;
+    color: var(--text-light);
+    margin-top: 10px;
 }
 
 /* 結果區域 */
 .result-container {
     text-align: center;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: var(--background-color);
+    box-shadow: var(--shadow-sm);
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.result-info {
+    margin: 15px 0;
+    padding: 10px;
+    background-color: var(--card-bg);
+    border-radius: 5px;
+    text-align: left;
+    max-height: 150px;
+    overflow-y: auto;
+    font-size: 0.9rem;
 }
 
 .download-btn {
@@ -239,34 +361,48 @@ main {
     border-radius: 5px;
     text-decoration: none;
     margin-top: 20px;
-    transition: all 0.3s ease;
+    transition: all var(--transition-speed) ease;
+    font-weight: 500;
+    box-shadow: var(--shadow-sm);
 }
 
 .download-btn:hover {
-    background-color: #ff5252;
+    background-color: var(--accent-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
 /* 頁尾 */
 footer {
     text-align: center;
-    margin-top: 40px;
-    padding: 20px;
-    color: #666;
+    margin-top: 2rem;
+    padding: 1rem 0;
+    color: var(--text-light);
+    font-size: 0.9rem;
 }
 
 footer a {
     color: var(--primary-color);
     text-decoration: none;
+    transition: color var(--transition-speed) ease;
 }
 
 footer a:hover {
+    color: var(--primary-dark);
     text-decoration: underline;
+}
+
+.version {
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+    color: var(--secondary-color);
 }
 
 /* 響應式設計 */
 @media (max-width: 768px) {
     main {
-        padding: 20px;
+        padding: 25px;
+        margin: 0 10px;
     }
     
     header h1 {
@@ -278,10 +414,51 @@ footer a:hover {
     }
     
     .dictionary-controls {
-        flex-direction: column;
+        justify-content: center;
     }
     
     .dictionary-add {
         flex-direction: column;
+    }
+    
+    .dictionary-container,
+    .progress-container,
+    .result-container {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    
+    main {
+        padding: 20px;
+    }
+    
+    header h1 {
+        font-size: 1.8rem;
+    }
+    
+    header p {
+        font-size: 1rem;
+    }
+    
+    .upload-btn, 
+    .secondary-btn,
+    .download-btn {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
+    
+    .dictionary-entry .dict-col {
+        padding: 0 5px;
+        font-size: 0.9rem;
+    }
+    
+    .delete-btn {
+        padding: 3px 8px;
+        font-size: 0.8rem;
     }
 } 
